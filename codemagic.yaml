@@ -1,0 +1,60 @@
+workflows:
+  android-debug:
+    name: Android Debug Build
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+    environment:
+      java: 17
+      android_signing:
+        - turnreserved_keystore
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+    scripts:
+      - name: Set up local.properties
+        script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
+      - name: Build debug APK
+        script: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+    artifacts:
+      - app/build/outputs/**/*.apk
+
+  android-release:
+    name: Android Release
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      java: 17
+      android_signing:
+        - turnreserved_keystore
+      groups:
+        - google_play
+      vars:
+        PACKAGE_NAME: "com.turnreserved.app"
+    scripts:
+      - name: Set up local.properties
+        script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
+      - name: Build AAB
+        script: |
+          chmod +x gradlew
+          ./gradlew bundleRelease
+      - name: Sign AAB
+        script: |
+          android-app-bundle build-universal-apk \
+            --bundle app/build/outputs/bundle/release/app-release.aab \
+            --ks $CM_KEYSTORE_PATH \
+            --ks-pass $CM_KEYSTORE_PASSWORD \
+            --ks-key-alias $CM_KEY_ALIAS \
+            --key-pass $CM_KEY_PASSWORD
+    artifacts:
+      - app/build/outputs/**/*.aab
+      - app/build/outputs/**/*.apk
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
