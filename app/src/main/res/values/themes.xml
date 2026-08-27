@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.TurnReserved" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#000914</item>
+        <item name="android:navigationBarColor">#000914</item>
+        <item name="android:windowBackground">#000914</item>
+    </style>
+</resources>
