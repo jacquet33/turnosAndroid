@@ -32,6 +32,7 @@ fun ServicesScreen(authViewModel: AuthViewModel) {
     var isLoading by remember { mutableStateOf(true) }
     var showAddDialog by remember { mutableStateOf(false) }
     var newName by remember { mutableStateOf("") }
+    var scheduleService by remember { mutableStateOf<Service?>(null) }
 
     fun load() {
         scope.launch {
@@ -70,7 +71,7 @@ fun ServicesScreen(authViewModel: AuthViewModel) {
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(services, key = { it.id }) { service ->
-                    ServiceCard(service, authViewModel, context) { load() }
+                    ServiceCard(service, authViewModel, context, onRefresh = { load() }, onSchedule = { scheduleService = service })
                 }
             }
         }
@@ -97,10 +98,14 @@ fun ServicesScreen(authViewModel: AuthViewModel) {
             dismissButton = { TextButton(onClick = { showAddDialog = false }) { Text("Cancelar", color = TextSecondary) } }
         )
     }
+
+    scheduleService?.let { svc ->
+        ScheduleConfigScreen(service = svc, authViewModel = authViewModel, onDismiss = { scheduleService = null })
+    }
 }
 
 @Composable
-private fun ServiceCard(service: Service, authViewModel: AuthViewModel, context: Context, onRefresh: () -> Unit) {
+private fun ServiceCard(service: Service, authViewModel: AuthViewModel, context: Context, onRefresh: () -> Unit, onSchedule: () -> Unit = {}) {
     val scope = rememberCoroutineScope()
     var expanded by remember { mutableStateOf(false) }
 
@@ -133,6 +138,11 @@ private fun ServiceCard(service: Service, authViewModel: AuthViewModel, context:
                         Icon(Icons.Outlined.MoreVert, contentDescription = "Opciones", tint = TextSecondary)
                     }
                     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Configurar horarios") },
+                            leadingIcon = { Icon(Icons.Outlined.Schedule, contentDescription = null) },
+                            onClick = { onSchedule(); expanded = false }
+                        )
                         DropdownMenuItem(
                             text = { Text("Copiar link") },
                             leadingIcon = { Icon(Icons.Outlined.Link, contentDescription = null) },
