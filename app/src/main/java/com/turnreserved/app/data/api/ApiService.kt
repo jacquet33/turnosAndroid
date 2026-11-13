@@ -6,6 +6,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
+import java.util.Locale
 
 class ApiService(private val tokenProvider: () -> String?) {
 
@@ -108,6 +110,34 @@ class ApiService(private val tokenProvider: () -> String?) {
         request("/subscription/create-preference", "POST", json.encodeToString(mapOf("plan" to plan)))
 
     fun cancelSubscription(): MessageResponse = request("/subscription/cancel", "POST")
+
+    // Explorar (modo cliente, sin auth)
+    fun exploreCategories(): List<CategoryGroup> = request("/explore/categories", authenticated = false)
+
+    fun explore(lat: Double, lng: Double, radiusKm: Double, group: String?, category: String?, query: String?): ExploreResponse {
+        val params = mutableListOf(
+            "lat=${"%.6f".format(Locale.US, lat)}",
+            "lng=${"%.6f".format(Locale.US, lng)}",
+            "radiusKm=${"%.1f".format(Locale.US, radiusKm)}",
+            "limit=100"
+        )
+        if (category != null) params.add("category=${enc(category)}")
+        else if (group != null) params.add("group=${enc(group)}")
+        if (!query.isNullOrBlank()) params.add("q=${enc(query.trim())}")
+        return request("/explore?${params.joinToString("&")}", authenticated = false)
+    }
+
+    fun searchCities(q: String): List<CityResult> = request("/explore/cities?q=${enc(q)}", authenticated = false)
+
+    fun business(publicId: String): Business = request("/explore/business/${enc(publicId)}", authenticated = false)
+
+    // Perfil público del negocio
+    fun getProfile(): PublicProfile = request("/profile")
+
+    fun updateProfile(update: ProfileUpdate): PublicProfile =
+        request("/profile", "PUT", json.encodeToString(update))
+
+    private fun enc(v: String): String = URLEncoder.encode(v, "UTF-8")
 }
 
 class ApiException(message: String, val code: Int = 0) : Exception(message)

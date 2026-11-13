@@ -47,6 +47,10 @@ dependencies {
     implementation(libs.activity.compose)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.lifecycle.runtime.compose)
+    implementation(libs.compose.material.icons.extended)
+
+    // Mapas: MapLibre + tiles de OpenFreeMap (gratis, sin API key)
+    implementation(libs.maplibre.android)
 
     // Kotlin Serialization
     implementation(libs.kotlinx.serialization.json)

@@ -11,18 +11,28 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.turnreserved.app.ui.auth.AuthViewModel
+import com.turnreserved.app.ui.explore.ClientExplore
+import com.turnreserved.app.ui.profile.PublicProfileScreen
 import com.turnreserved.app.ui.theme.*
 
 enum class DashTab(val label: String, val icon: ImageVector) {
     Services("Servicios", Icons.Outlined.Work),
     Agenda("Agenda", Icons.Outlined.CalendarMonth),
-    Clients("Clientes", Icons.Outlined.People)
+    Clients("Clientes", Icons.Outlined.People),
+    Profile("Perfil", Icons.Outlined.Storefront)
 }
 
 @Composable
 fun DashboardScreen(authViewModel: AuthViewModel) {
     var selectedTab by remember { mutableStateOf(DashTab.Services) }
+    var showExplore by remember { mutableStateOf(false) }
     val user = authViewModel.state.collectAsState().value.user
+
+    if (showExplore) {
+        // Ver la app como cliente (mapa) sin cerrar sesión
+        ClientExplore(accountLabel = "Mi panel", onAccount = { showExplore = false }, onClose = { showExplore = false })
+        return
+    }
 
     Column(
         modifier = Modifier
@@ -43,8 +53,13 @@ fun DashboardScreen(authViewModel: AuthViewModel) {
                     )
                 }
             }
-            IconButton(onClick = { authViewModel.logout() }) {
-                Icon(Icons.Outlined.Logout, contentDescription = "Salir", tint = TextSecondary)
+            Row {
+                IconButton(onClick = { showExplore = true }) {
+                    Icon(Icons.Outlined.Map, contentDescription = "Explorar el mapa", tint = TextSecondary)
+                }
+                IconButton(onClick = { authViewModel.logout() }) {
+                    Icon(Icons.Outlined.Logout, contentDescription = "Salir", tint = TextSecondary)
+                }
             }
         }
 
@@ -54,6 +69,7 @@ fun DashboardScreen(authViewModel: AuthViewModel) {
                 DashTab.Services -> ServicesScreen(authViewModel)
                 DashTab.Agenda -> AgendaScreen(authViewModel)
                 DashTab.Clients -> ClientsScreen(authViewModel)
+                DashTab.Profile -> PublicProfileScreen(authViewModel.api)
             }
         }
 

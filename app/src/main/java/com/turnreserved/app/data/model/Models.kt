@@ -117,3 +117,84 @@ data class PlanInfo(val name: String, val price: Int, val maxServices: Int, val 
         )
     }
 }
+
+// ── Explorar (modo cliente) ─────────────────────────────────────────────────
+
+@Serializable
+data class CategoryGroup(val id: String, val name: String, val categories: List<BusinessCategory>)
+
+@Serializable
+data class BusinessCategory(val id: String, val name: String, val icon: String)
+
+@Serializable
+data class PublicService(val name: String, val linkId: String)
+
+@Serializable
+data class Business(
+    val id: String,
+    val name: String,
+    val category: String? = null,
+    val group: String? = null,
+    val description: String = "",
+    val address: String = "",
+    val city: String = "",
+    val province: String = "",
+    val lat: Double,
+    val lng: Double,
+    val phone: String? = null,
+    val photoUrl: String? = null,
+    val distanceKm: Double? = null,
+    val services: List<PublicService> = emptyList()
+) {
+    val fullAddress: String get() = listOf(address, city, province).filter { it.isNotBlank() }.joinToString(", ")
+    val distanceText: String? get() = distanceKm?.let { if (it < 1) "${(it * 1000).toInt()} m" else String.format(java.util.Locale.US, "%.1f km", it) }
+}
+
+@Serializable
+data class ExploreResponse(val radiusKm: Double, val count: Int, val results: List<Business>)
+
+@Serializable
+data class CityResult(
+    val id: String,
+    val name: String,
+    val province: String? = null,
+    val department: String? = null,
+    val lat: Double,
+    val lng: Double
+) {
+    val label: String get() = listOfNotNull(name, province).joinToString(", ")
+}
+
+// ── Perfil público del negocio ──────────────────────────────────────────────
+
+@Serializable
+data class PublicProfile(
+    val publicId: String? = null,
+    val businessName: String = "",
+    val category: String? = null,
+    val description: String = "",
+    val address: String = "",
+    val city: String = "",
+    val province: String = "",
+    val lat: Double? = null,
+    val lng: Double? = null,
+    val publicPhone: String = "",
+    val photoUrl: String = "",
+    val isListed: Boolean = false,
+    val geocodeWarning: String? = null
+)
+
+@Serializable
+data class ProfileUpdate(
+    val businessName: String,
+    val category: String?,
+    val description: String,
+    val address: String,
+    val city: String,
+    val province: String,
+    val publicPhone: String,
+    val isListed: Boolean,
+    /** null → el servidor geocodifica la dirección */
+    val lat: Double? = null,
+    val lng: Double? = null
+)
